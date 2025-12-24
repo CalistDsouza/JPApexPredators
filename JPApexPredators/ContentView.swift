@@ -6,30 +6,31 @@
 //
 
 import SwiftUI
+import MapKit
 
 struct ContentView: View {
     let predators = Predators()
     
     @State var searchText = ""
+    @State  var alphabetical = false
+    @State var currentSelection = APType.all
     
     var filteredDino: [ApexPredator]{
-        if searchText.isEmpty {
-            return predators.apexPredators
-        }
-        else {
-            return predators.apexPredators.filter { predator in
-                predator.name.localizedCaseInsensitiveContains(searchText)
-            }
-        }
+        predators.filter(by: currentSelection)
+        
+        predators.sort(by: alphabetical)
+        return predators.search(for: searchText)
     }
     
     var body: some View {
         NavigationStack{
             List(filteredDino){ predator in
                 NavigationLink{
-                    Image(predator.image)
-                        .resizable()
-                        .scaledToFit()
+                    PredatorDetail(predator: predator, position: .camera(
+                        MapCamera(
+                            centerCoordinate: predator.location,
+                            distance: 30000
+                        )))
                 } label : {
                     HStack {
                         //                Dinosaur image
@@ -59,6 +60,36 @@ struct ContentView: View {
             .searchable(text: $searchText)
             .autocorrectionDisabled()
             .animation(.default, value: searchText)
+            .toolbar{
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        withAnimation {
+                            alphabetical.toggle()
+                        }
+                    } label: {
+                        
+                        Image(systemName: alphabetical ? "film" : "textformat")
+                            .symbolEffect(.bounce, value: alphabetical)
+                        
+//                        if alphabetical {
+//                            Image(systemName: "film")
+//                        } else {
+//                            Image(systemName: "textformat")
+//                        }
+                    }
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Menu {
+                        Picker("Filter", selection: $currentSelection.animation()){
+                            ForEach(APType.allCases) { type in
+                                Label(type.rawValue.capitalized, systemImage: type.icon)
+                            }
+                        }
+                    } label: {
+                        Image(systemName: "slider.horizontal.3")
+                    }
+                }
+            }
             
         }
         .preferredColorScheme(.dark)
