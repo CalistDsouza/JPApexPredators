@@ -11,6 +11,8 @@ import MapKit
 struct PredatorDetail: View {
     let predator: ApexPredator
     
+    @Namespace var namespace
+    
     @State var position: MapCameraPosition
     
     var body: some View {
@@ -45,9 +47,13 @@ struct PredatorDetail: View {
                         .font(.largeTitle)
                     
                     NavigationLink{
-                        Image(predator.image)
-                            .resizable()
-                            .scaledToFit()
+                        PredatorMap(position: .camera(MapCamera(
+                            centerCoordinate: predator.location,
+                            distance: 1000,
+                            heading: 250,
+                            pitch: 80))
+                        )
+                        .navigationTransition(.zoom(sourceID: 1, in: namespace))
                     } label: {
                         //            Current location
                         Map(position: $position){
@@ -75,6 +81,7 @@ struct PredatorDetail: View {
                         .clipShape(.rect(cornerRadius: 15))
                         
                     }
+                    .matchedTransitionSource(id: 1, in: namespace)
                     
                     
                     //            list of movies
